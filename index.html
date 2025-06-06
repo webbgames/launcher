@@ -18,21 +18,21 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="system-info">
-                <div class="info-item">
+                <div class="info-item" data-info="cpu">
                     <i class="fas fa-microchip"></i>
-                    <span>CPU 45%</span>
+                    <span id="cpuUsage">CPU 45%</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item" data-info="memory">
                     <i class="fas fa-memory"></i>
-                    <span>8.2GB</span>
+                    <span id="memoryUsage">8.2GB</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item" data-info="temperature">
                     <i class="fas fa-thermometer-half"></i>
-                    <span>62°C</span>
+                    <span id="tempReading">62°C</span>
                 </div>
             </div>
             
-            <div class="time-section">
+            <div class="time-section" id="timeSection">
                 <div id="currentTime" class="current-time"></div>
                 <div id="currentDate" class="current-date"></div>
             </div>
@@ -112,7 +112,7 @@
         <!-- Bottom Taskbar -->
         <div class="taskbar">
             <div class="taskbar-section taskbar-left">
-                <div class="start-menu">
+                <div class="start-menu" id="startButton">
                     <div class="start-icon">
                         <i class="fab fa-windows"></i>
                     </div>
@@ -120,16 +120,16 @@
                 </div>
                 
                 <div class="quick-apps">
-                    <div class="app-icon active" title="Games">
+                    <div class="app-icon active" title="Games" data-app="games">
                         <i class="fas fa-gamepad"></i>
                     </div>
-                    <div class="app-icon" title="Files">
+                    <div class="app-icon" title="Files" data-app="files">
                         <i class="fas fa-folder"></i>
                     </div>
-                    <div class="app-icon" title="Settings">
+                    <div class="app-icon" title="Settings" data-app="settings">
                         <i class="fas fa-cog"></i>
                     </div>
-                    <div class="app-icon" title="Browser">
+                    <div class="app-icon" title="Browser" data-app="browser">
                         <i class="fas fa-globe"></i>
                     </div>
                 </div>
@@ -137,13 +137,13 @@
 
             <div class="taskbar-section taskbar-right">
                 <div class="system-tray">
-                    <div class="tray-icon" title="Network">
+                    <div class="tray-icon" title="Network" data-tray="network">
                         <i class="fas fa-wifi"></i>
                     </div>
-                    <div class="tray-icon" title="Audio">
+                    <div class="tray-icon" title="Audio" data-tray="audio">
                         <i class="fas fa-volume-up"></i>
                     </div>
-                    <div class="tray-icon" title="Battery">
+                    <div class="tray-icon" title="Battery" data-tray="power">
                         <i class="fas fa-battery-three-quarters"></i>
                     </div>
                 </div>
@@ -367,30 +367,6 @@
             }
         });
 
-        // Taskbar Interactions
-        document.querySelector('.start-menu').addEventListener('click', function() {
-            this.classList.toggle('active');
-            showNotification('Start menu clicked', 'info');
-        });
-
-        document.querySelectorAll('.app-icon').forEach(icon => {
-            icon.addEventListener('click', function() {
-                document.querySelectorAll('.app-icon').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                
-                const title = this.getAttribute('title');
-                showNotification(`${title} opened`, 'info');
-            });
-        });
-
-        // System tray interactions
-        document.querySelectorAll('.tray-icon').forEach(icon => {
-            icon.addEventListener('click', function() {
-                const title = this.getAttribute('title');
-                showNotification(`${title} settings`, 'info');
-            });
-        });
-
         // Prevent context menu on non-game elements
         document.addEventListener('contextmenu', function(e) {
             if (!e.target.closest('.game-card')) {
@@ -398,8 +374,375 @@
             }
         });
 
+        // Enhanced Desktop Functionality
+        
+        // System monitoring data simulation
+        const systemData = {
+            cpu: { usage: 45, cores: 8, temperature: 62, frequency: 3.2 },
+            memory: { used: 8.2, total: 16, available: 7.8 },
+            temperature: { cpu: 62, gpu: 58, motherboard: 45 }
+        };
+
+        // Game database with detailed information
+        const gameDatabase = {
+            'space-explorer': {
+                title: 'Space Explorer',
+                genre: 'Action Adventure',
+                description: 'Embark on an epic journey through the cosmos in this thrilling space adventure. Explore distant planets, battle alien creatures, and uncover the mysteries of the universe.',
+                rating: 4.8,
+                playtime: '45 hours',
+                achievements: 28,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400',
+                    'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: true, antialiasing: 'MSAA 4x' },
+                    audio: { master: 80, effects: 75, music: 60, voice: 85 },
+                    controls: { sensitivity: 7, invertY: false, autoAim: false }
+                }
+            },
+            'mind-bender': {
+                title: 'Mind Bender',
+                genre: 'Puzzle Strategy',
+                description: 'Challenge your intellect with mind-bending puzzles that will test your logic and creativity. Each level presents unique challenges that require innovative thinking.',
+                rating: 4.6,
+                playtime: '25 hours',
+                achievements: 15,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400',
+                    'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'High', resolution: '1920x1080', vsync: true, antialiasing: 'FXAA' },
+                    audio: { master: 70, effects: 65, music: 80, voice: 75 },
+                    controls: { sensitivity: 5, hints: true, autoSave: true }
+                }
+            },
+            'speed-racer': {
+                title: 'Speed Racer',
+                genre: 'Racing Simulation',
+                description: 'Experience the thrill of high-speed racing with realistic physics and stunning visuals. Race on iconic tracks around the world and customize your dream car.',
+                rating: 4.7,
+                playtime: '60 hours',
+                achievements: 35,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+                    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'Ultra', resolution: '2560x1440', vsync: false, antialiasing: 'TAA' },
+                    audio: { master: 85, effects: 90, music: 70, voice: 80 },
+                    controls: { sensitivity: 8, assists: false, forceFeedback: true }
+                }
+            },
+            'strategy-master': {
+                title: 'Strategy Master',
+                genre: 'Turn-based Strategy',
+                description: 'Command armies and build empires in this deep strategic experience. Every decision matters as you navigate complex political and military challenges.',
+                rating: 4.9,
+                playtime: '120 hours',
+                achievements: 42,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400',
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'High', resolution: '1920x1080', vsync: true, antialiasing: 'MSAA 2x' },
+                    audio: { master: 75, effects: 70, music: 85, voice: 80 },
+                    controls: { sensitivity: 6, tooltips: true, autoEndTurn: false }
+                }
+            },
+            'quest-world': {
+                title: 'Quest World',
+                genre: 'Open World RPG',
+                description: 'Immerse yourself in a vast fantasy world filled with epic quests, memorable characters, and endless adventures. Your choices shape the destiny of the realm.',
+                rating: 4.8,
+                playtime: '200 hours',
+                achievements: 67,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: true, antialiasing: 'TAA' },
+                    audio: { master: 80, effects: 75, music: 90, voice: 85 },
+                    controls: { sensitivity: 7, subtitles: true, quickSave: true }
+                }
+            },
+            'cyber-strike': {
+                title: 'Cyber Strike',
+                genre: 'FPS Shooter',
+                description: 'Enter the cyberpunk battlefield in this intense first-person shooter. Use advanced weapons and cybernetic enhancements to dominate your opponents.',
+                rating: 4.5,
+                playtime: '80 hours',
+                achievements: 31,
+                screenshots: [
+                    'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400'
+                ],
+                settings: {
+                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: false, antialiasing: 'MSAA 4x' },
+                    audio: { master: 85, effects: 95, music: 65, voice: 80 },
+                    controls: { sensitivity: 9, crosshair: 'dot', recoilCompensation: false }
+                }
+            }
+        };
+
+        // Initialize enhanced functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSystemMonitoring();
+            initializeTimeDisplay();
+            initializeEnhancedGameInteractions();
+            initializeStartMenu();
+            initializeSystemTray();
+        });
+
+        // System monitoring with real-time updates
+        function initializeSystemMonitoring() {
+            // Add click handlers for system info items
+            document.querySelectorAll('.info-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const infoType = this.dataset.info;
+                    showSystemInfoModal(infoType);
+                });
+            });
+
+            // Simulate real-time system data updates
+            setInterval(updateSystemData, 2000);
+        }
+
+        function updateSystemData() {
+            // Simulate CPU usage fluctuation
+            systemData.cpu.usage = Math.max(20, Math.min(95, systemData.cpu.usage + (Math.random() - 0.5) * 10));
+            document.getElementById('cpuUsage').textContent = `CPU ${Math.round(systemData.cpu.usage)}%`;
+
+            // Simulate memory usage changes
+            systemData.memory.used = Math.max(4, Math.min(14, systemData.memory.used + (Math.random() - 0.5) * 0.5));
+            document.getElementById('memoryUsage').textContent = `${systemData.memory.used.toFixed(1)}GB`;
+
+            // Simulate temperature changes
+            systemData.temperature.cpu = Math.max(45, Math.min(85, systemData.temperature.cpu + (Math.random() - 0.5) * 3));
+            document.getElementById('tempReading').textContent = `${Math.round(systemData.temperature.cpu)}°C`;
+        }
+
+        function showSystemInfoModal(infoType) {
+            showNotification(`Opening ${infoType.toUpperCase()} monitoring panel...`, 'info');
+            
+            setTimeout(() => {
+                let content = '';
+                switch(infoType) {
+                    case 'cpu':
+                        content = `CPU: Intel Core i7-12700K\n${systemData.cpu.cores} Cores, ${systemData.cpu.frequency}GHz\nUsage: ${Math.round(systemData.cpu.usage)}%\nTemperature: ${systemData.temperature.cpu}°C`;
+                        break;
+                    case 'memory':
+                        const memoryPercent = (systemData.memory.used / systemData.memory.total) * 100;
+                        content = `Memory: ${systemData.memory.total}GB DDR4\nUsed: ${systemData.memory.used.toFixed(1)}GB (${Math.round(memoryPercent)}%)\nAvailable: ${systemData.memory.available.toFixed(1)}GB\nSpeed: 3200MHz`;
+                        break;
+                    case 'temperature':
+                        content = `System Temperatures:\nCPU: ${systemData.temperature.cpu}°C\nGPU: ${systemData.temperature.gpu}°C\nMotherboard: ${systemData.temperature.motherboard}°C`;
+                        break;
+                }
+                alert(content);
+            }, 500);
+        }
+
+        // Enhanced time display with calendar functionality
+        function initializeTimeDisplay() {
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const dateString = now.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                document.getElementById('currentTime').textContent = timeString;
+                document.getElementById('currentDate').textContent = dateString;
+            }
+
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // Add click handler for calendar
+            document.getElementById('timeSection').addEventListener('click', showCalendar);
+        }
+
+        function showCalendar() {
+            const now = new Date();
+            const dateInfo = `Today: ${now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}\n\nUpcoming Events:\n• System Maintenance - Tomorrow 2:00 AM\n• Game Update Available - Space Explorer\n• Weekly Backup - Friday 11:00 PM`;
+            
+            showNotification('Opening calendar...', 'info');
+            setTimeout(() => alert(dateInfo), 500);
+        }
+
+        // Enhanced game interactions
+        function initializeEnhancedGameInteractions() {
+            const contextMenu = document.getElementById('contextMenu');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            let activeCard = null;
+
+            // Game card interactions
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    launchGame(this);
+                });
+
+                card.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    activeCard = this;
+                    showContextMenu(e.clientX, e.clientY);
+                });
+
+                card.addEventListener('mouseenter', function() {
+                    this.classList.add('hovered');
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.classList.remove('hovered');
+                });
+            });
+
+            // Context menu actions
+            document.querySelectorAll('.context-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    if (activeCard) {
+                        handleContextAction(action, activeCard);
+                    }
+                    hideContextMenu();
+                });
+            });
+
+            function handleContextAction(action, card) {
+                const gameId = card.dataset.game;
+                const gameData = gameDatabase[gameId];
+                
+                switch(action) {
+                    case 'launch':
+                        launchGame(card);
+                        break;
+                    case 'info':
+                        showGameInfo(gameData);
+                        break;
+                    case 'settings':
+                        showGameSettings(gameData);
+                        break;
+                    case 'uninstall':
+                        confirmUninstall(gameData.title);
+                        break;
+                }
+            }
+
+            function showGameInfo(gameData) {
+                const info = `${gameData.title}\n${gameData.genre}\n\n${gameData.description}\n\nRating: ${gameData.rating}/5 stars\nPlaytime: ${gameData.playtime}\nAchievements: ${gameData.achievements}`;
+                showNotification('Loading game information...', 'info');
+                setTimeout(() => alert(info), 500);
+            }
+
+            function showGameSettings(gameData) {
+                const settings = `${gameData.title} Settings\n\nGraphics:\n• Quality: ${gameData.settings.graphics.quality}\n• Resolution: ${gameData.settings.graphics.resolution}\n• V-Sync: ${gameData.settings.graphics.vsync ? 'On' : 'Off'}\n• Anti-aliasing: ${gameData.settings.graphics.antialiasing}\n\nAudio:\n• Master: ${gameData.settings.audio.master}%\n• Effects: ${gameData.settings.audio.effects}%\n• Music: ${gameData.settings.audio.music}%\n• Voice: ${gameData.settings.audio.voice}%`;
+                showNotification('Opening game settings...', 'info');
+                setTimeout(() => alert(settings), 500);
+            }
+        }
+
+        // Start Menu functionality
+        function initializeStartMenu() {
+            const startButton = document.getElementById('startButton');
+            const startMenu = document.getElementById('startMenu');
+            
+            if (startButton) {
+                startButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleStartMenu();
+                });
+            }
+
+            // Simulate start menu with notification
+            function toggleStartMenu() {
+                showNotification('Start Menu opened', 'info');
+                setTimeout(() => {
+                    const menuItems = 'Start Menu:\n\n📁 File Manager\n⚙️ Settings\n📊 Task Manager\n🧮 Calculator\n\n🔧 System Tools:\n📋 Registry Editor\n💻 Terminal\n\n⚡ Power Options:\n🌙 Sleep\n🔄 Restart\n⚡ Shutdown';
+                    alert(menuItems);
+                }, 300);
+            }
+        }
+
+        // System Tray functionality
+        function initializeSystemTray() {
+            document.querySelectorAll('.tray-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const trayType = this.dataset.tray;
+                    showTrayPanel(trayType);
+                });
+            });
+
+            function showTrayPanel(trayType) {
+                let content = '';
+                switch(trayType) {
+                    case 'network':
+                        content = 'Network Settings:\n\n📶 WiFi: Connected\n🌐 Network: WebbGames-5G\n📡 Signal: Excellent (95%)\n⚡ Speed: 150 Mbps\n\n🔧 Network Troubleshooter\n⚙️ Advanced Settings';
+                        break;
+                    case 'audio':
+                        content = 'Audio Mixer:\n\n🔊 Master Volume: 75%\n🎵 Music: 80%\n🎮 Game Audio: 90%\n🎤 Microphone: 65%\n\n🎧 Output Device: Headphones\n🎙️ Input Device: USB Microphone';
+                        break;
+                    case 'notifications':
+                        content = 'Notifications:\n\n📢 System Update Available\n🎮 3 Game Updates Ready\n📧 2 New Messages\n⚠️ Low Disk Space Warning\n\n🔕 Do Not Disturb: Off\n⚙️ Notification Settings';
+                        break;
+                    case 'power':
+                        content = 'Power Management:\n\n🔋 Battery: 87% (Charging)\n⚡ Power Plan: High Performance\n🌡️ CPU Temperature: 62°C\n\n💡 Power Saver Mode\n⚙️ Advanced Power Settings\n📊 Battery Report';
+                        break;
+                }
+                showNotification(`Opening ${trayType} panel...`, 'info');
+                setTimeout(() => alert(content), 500);
+            }
+        }
+
+        // Enhanced taskbar app functionality
+        document.querySelectorAll('.app-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                document.querySelectorAll('.app-icon').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const appType = this.dataset.app;
+                const title = this.getAttribute('title');
+                
+                showNotification(`Opening ${title}...`, 'info');
+                
+                setTimeout(() => {
+                    let content = '';
+                    switch(appType) {
+                        case 'files':
+                            content = 'File Manager:\n\n📁 Documents\n📁 Downloads\n📁 Pictures\n📁 Videos\n📁 Games\n\n💾 Local Disk (C:) - 256 GB free\n💿 Local Disk (D:) - 1.2 TB free';
+                            break;
+                        case 'settings':
+                            content = 'System Settings:\n\n🖥️ Display & Graphics\n🔊 Sound & Audio\n🌐 Network & Internet\n🔐 Privacy & Security\n⚙️ System & Performance\n🎮 Gaming & Apps\n👤 User Accounts';
+                            break;
+                        case 'taskmanager':
+                            content = 'Task Manager:\n\n📊 Performance:\n• CPU: 45% (Intel i7-12700K)\n• Memory: 8.2/16 GB (51%)\n• Disk: 15% activity\n• Network: 2.5 Mbps\n\n🔄 Running Processes: 127\n⚡ Startup Programs: 12 enabled';
+                            break;
+                        case 'calculator':
+                            content = 'Calculator Ready\n\nStandard Calculator Mode\n\n[7] [8] [9] [÷]\n[4] [5] [6] [×]\n[1] [2] [3] [-]\n[0] [.] [=] [+]\n\nResult: 0';
+                            break;
+                    }
+                    alert(content);
+                }, 500);
+            });
+        });
+
         // Initialize
-        console.log('WebbGames Desktop initialized successfully');
+        console.log('WebbGames Desktop with Enhanced Functionality initialized successfully');
     </script>
 </body>
 </html>
