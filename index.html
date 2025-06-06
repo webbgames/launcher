@@ -3,43 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebbGames Launcher</title>
+    <title>WebbGames Desktop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <canvas id="spaceCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></canvas>
-    <div id="timeDisplay" class="time-display"></div>
-    <div class="games-container">
-        <div class="game-item">
-            <div class="game-icon"></div>
-            <p>Game 1</p>
+    <canvas id="spaceCanvas"></canvas>
+    
+    <!-- Desktop Area -->
+    <div class="desktop">
+        <!-- System Info Widget -->
+        <div class="system-widget">
+            <div class="widget-item">
+                <i class="fas fa-microchip"></i>
+                <span>CPU: 45%</span>
+            </div>
+            <div class="widget-item">
+                <i class="fas fa-memory"></i>
+                <span>RAM: 8.2GB</span>
+            </div>
+            <div class="widget-item">
+                <i class="fas fa-thermometer-half"></i>
+                <span>62°C</span>
+            </div>
         </div>
-        <div class="game-item">
-            <div class="game-icon"></div>
-            <p>Game 2</p>
+
+        <!-- Time and Date Widget -->
+        <div class="time-widget">
+            <div id="timeDisplay" class="time-display"></div>
+            <div id="dateDisplay" class="date-display"></div>
         </div>
-        <div class="game-item">
-            <div class="game-icon"></div>
-            <p>Game 3</p>
-        </div>
-        <div class="game-item">
-            <div class="game-icon"></div>
-            <p>Game 4</p>
-        </div>
-        <div class="game-item">
-            <div class="game-icon"></div>
-            <p>Game 5</p>
+
+        <!-- Games Grid -->
+        <div class="desktop-grid">
+            <div class="game-item" data-game="action">
+                <div class="game-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <p>Space Explorer</p>
+            </div>
+            <div class="game-item" data-game="puzzle">
+                <div class="game-icon">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+                <p>Mind Bender</p>
+            </div>
+            <div class="game-item" data-game="racing">
+                <div class="game-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <p>Speed Racer</p>
+            </div>
+            <div class="game-item" data-game="strategy">
+                <div class="game-icon">
+                    <i class="fas fa-chess"></i>
+                </div>
+                <p>Strategy Master</p>
+            </div>
+            <div class="game-item" data-game="adventure">
+                <div class="game-icon">
+                    <i class="fas fa-map"></i>
+                </div>
+                <p>Quest World</p>
+            </div>
+            <div class="game-item" data-game="shooter">
+                <div class="game-icon">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+                <p>Cyber Strike</p>
+            </div>
         </div>
     </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="taskbar-left">
+            <div class="start-button">
+                <i class="fab fa-windows"></i>
+                <span>WebbGames</span>
+            </div>
+            <div class="taskbar-apps">
+                <div class="taskbar-app active">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <div class="taskbar-app">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="taskbar-app">
+                    <i class="fas fa-cog"></i>
+                </div>
+            </div>
+        </div>
+        <div class="taskbar-right">
+            <div class="system-tray">
+                <div class="tray-item">
+                    <i class="fas fa-wifi"></i>
+                </div>
+                <div class="tray-item">
+                    <i class="fas fa-volume-up"></i>
+                </div>
+                <div class="tray-item">
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+                <div class="tray-time">
+                    <div id="taskbarTime"></div>
+                    <div id="taskbarDate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-item">
+            <i class="fas fa-play"></i>
+            <span>Launch Game</span>
+        </div>
+        <div class="context-item">
+            <i class="fas fa-info-circle"></i>
+            <span>Game Info</span>
+        </div>
+        <div class="context-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </div>
+    </div>
+
     <script src="background.js"></script>
     <script>
+        // Time and Date Updates
         function updateTime() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const dateString = now.toLocaleDateString([], {weekday: 'long', month: 'short', day: 'numeric'});
+            
             document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('dateDisplay').textContent = dateString;
+            document.getElementById('taskbarTime').textContent = timeString;
+            document.getElementById('taskbarDate').textContent = now.toLocaleDateString([], {month: 'short', day: 'numeric'});
         }
+        
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Game Item Interactions
+        document.querySelectorAll('.game-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const gameName = this.querySelector('p').textContent;
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                    alert(`Launching ${gameName}...`);
+                }, 150);
+            });
+
+            // Right-click context menu
+            item.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                const contextMenu = document.getElementById('contextMenu');
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+            });
+        });
+
+        // Hide context menu on click elsewhere
+        document.addEventListener('click', function() {
+            document.getElementById('contextMenu').style.display = 'none';
+        });
+
+        // Taskbar interactions
+        document.querySelector('.start-button').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        // System widget animations
+        document.querySelectorAll('.widget-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
     </script>
 </body>
 </html>
