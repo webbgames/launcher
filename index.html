@@ -195,144 +195,967 @@
     </div>
 
     <script src="background.js"></script>
-    <script>
-        // Time and Date Management
-        function updateTime() {
-            const now = new Date();
-            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-            const dateOptions = { weekday: 'long', month: 'short', day: 'numeric' };
-            
-            const timeString = now.toLocaleTimeString([], timeOptions);
-            const dateString = now.toLocaleDateString([], dateOptions);
-            const shortDate = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            
-            document.getElementById('currentTime').textContent = timeString;
-            document.getElementById('currentDate').textContent = dateString;
-            document.getElementById('taskbarTime').textContent = timeString;
-            document.getElementById('taskbarDate').textContent = shortDate;
-        }
-        
-        setInterval(updateTime, 1000);
-        updateTime();
-
-        // Game Card Interactions
-        const gameCards = document.querySelectorAll('.game-card');
-        const contextMenu = document.getElementById('contextMenu');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        let activeCard = null;
-
-        gameCards.forEach(card => {
-            // Click to launch
-            card.addEventListener('click', function(e) {
-                e.preventDefault();
-                launchGame(this);
+    <script src="background.js">
+        // System monitoring with real-time updates
+        function initializeSystemMonitoring() {
+            document.querySelectorAll('.info-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const infoType = this.dataset.info;
+                    showSystemInfoModal(infoType);
+                });
             });
-
-            // Right-click context menu
-            card.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                showContextMenu(e, this);
-            });
-
-            // Hover effects
-            card.addEventListener('mouseenter', function() {
-                this.classList.add('hovered');
-            });
-
-            card.addEventListener('mouseleave', function() {
-                this.classList.remove('hovered');
-            });
-        });
-
-        // Context Menu Functions
-        function showContextMenu(e, card) {
-            activeCard = card;
-            const gameName = card.querySelector('.game-title').textContent;
-            document.getElementById('contextGameName').textContent = gameName;
-            
-            contextMenu.classList.remove('hidden');
-            contextMenu.style.left = e.pageX + 'px';
-            contextMenu.style.top = e.pageY + 'px';
-            
-            // Adjust position if menu goes off screen
-            const rect = contextMenu.getBoundingClientRect();
-            if (rect.right > window.innerWidth) {
-                contextMenu.style.left = (e.pageX - rect.width) + 'px';
-            }
-            if (rect.bottom > window.innerHeight) {
-                contextMenu.style.top = (e.pageY - rect.height) + 'px';
-            }
+            setInterval(updateSystemData, 2000);
         }
 
-        function hideContextMenu() {
-            contextMenu.classList.add('hidden');
-            activeCard = null;
+        function updateSystemData() {
+            systemData.cpu.usage = Math.max(20, Math.min(95, systemData.cpu.usage + (Math.random() - 0.5) * 10));
+            document.getElementById('cpuUsage').textContent = `CPU ${Math.round(systemData.cpu.usage)}%`;
+
+            systemData.memory.used = Math.max(4, Math.min(14, systemData.memory.used + (Math.random() - 0.5) * 0.5));
+            document.getElementById('memoryUsage').textContent = `${systemData.memory.used.toFixed(1)}GB`;
+
+            systemData.temperature.cpu = Math.max(45, Math.min(85, systemData.temperature.cpu + (Math.random() - 0.5) * 3));
+            document.getElementById('tempReading').textContent = `${Math.round(systemData.temperature.cpu)}°C`;
         }
 
-        // Context menu item clicks
-        document.querySelectorAll('.context-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const action = this.dataset.action;
-                if (activeCard) {
-                    handleContextAction(action, activeCard);
-                }
-                hideContextMenu();
-            });
-        });
+        function showSystemInfoModal(infoType) {
+            const modal = document.getElementById('systemInfoModal');
+            const title = document.getElementById('systemInfoTitle');
+            const body = document.getElementById('systemInfoBody');
 
-        function handleContextAction(action, card) {
-            const gameName = card.querySelector('.game-title').textContent;
+            let content = '';
             
-            switch(action) {
-                case 'launch':
-                    launchGame(card);
+            switch(infoType) {
+                case 'cpu':
+                    title.textContent = 'CPU Information';
+                    content = `
+                        <div class="system-info-grid">
+                            <div class="info-card">
+                                <h3>Processor</h3>
+                                <p>Intel Core i7-12700K</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${systemData.cpu.usage}%"></div>
+                                </div>
+                                <span>${Math.round(systemData.cpu.usage)}% Usage</span>
+                            </div>
+                            <div class="info-card">
+                                <h3>Cores</h3>
+                                <p>${systemData.cpu.cores} Cores / 16 Threads</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>Frequency</h3>
+                                <p>${systemData.cpu.frequency} GHz</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>Temperature</h3>
+                                <p>${systemData.temperature.cpu}°C</p>
+                            </div>
+                        </div>
+                    `;
                     break;
-                case 'info':
-                    showGameInfo(gameName);
+                case 'memory':
+                    title.textContent = 'Memory Information';
+                    const memoryPercent = (systemData.memory.used / systemData.memory.total) * 100;
+                    content = `
+                        <div class="system-info-grid">
+                            <div class="info-card">
+                                <h3>Total Memory</h3>
+                                <p>${systemData.memory.total} GB DDR4</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>Used Memory</h3>
+                                <p>${systemData.memory.used.toFixed(1)} GB</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${memoryPercent}%"></div>
+                                </div>
+                                <span>${Math.round(memoryPercent)}% Used</span>
+                            </div>
+                        </div>
+                    `;
                     break;
-                case 'settings':
-                    showGameSettings(gameName);
-                    break;
-                case 'uninstall':
-                    confirmUninstall(gameName);
+                case 'temperature':
+                    title.textContent = 'Temperature Monitoring';
+                    content = `
+                        <div class="system-info-grid">
+                            <div class="info-card">
+                                <h3>CPU Temperature</h3>
+                                <p>${systemData.temperature.cpu}°C</p>
+                            </div>
+                            <div class="info-card">
+                                <h3>GPU Temperature</h3>
+                                <p>${systemData.temperature.gpu}°C</p>
+                            </div>
+                        </div>
+                    `;
                     break;
             }
+            
+            body.innerHTML = content;
+            modal.classList.remove('hidden');
         }
 
-        // Game Launch Function
-        function launchGame(card) {
-            const gameName = card.querySelector('.game-title').textContent;
-            
-            // Add launch animation
-            card.classList.add('launching');
-            
-            // Show loading overlay
-            document.getElementById('loadingGameName').textContent = gameName;
-            loadingOverlay.classList.remove('hidden');
-            
-            // Simulate game launch
-            setTimeout(() => {
-                loadingOverlay.classList.add('hidden');
-                card.classList.remove('launching');
+        // Time display functionality
+        function initializeTimeDisplay() {
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateString = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
                 
-                // Show success message
-                showNotification(`${gameName} launched successfully!`, 'success');
-            }, 2000);
+                document.getElementById('currentTime').textContent = timeString;
+                document.getElementById('currentDate').textContent = dateString;
+            }
+            
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            document.getElementById('timeSection').addEventListener('click', function() {
+                showCalendar();
+            });
         }
 
-        // Utility Functions
-        function showGameInfo(gameName) {
-            showNotification(`Showing information for ${gameName}`, 'info');
+        function showCalendar() {
+            const modal = document.getElementById('calendarModal');
+            const content = document.getElementById('calendarContent');
+            
+            const now = new Date();
+            const month = now.toLocaleDateString([], { month: 'long', year: 'numeric' });
+            
+            content.innerHTML = `
+                <div class="calendar-header">
+                    <h3>${month}</h3>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                    ${generateCalendarDays(now)}
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
         }
 
-        function showGameSettings(gameName) {
-            showNotification(`Opening settings for ${gameName}`, 'info');
+        function generateCalendarDays(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = date.getDate();
+            
+            let days = '';
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                days += '<div class="calendar-day empty"></div>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = day === today ? 'today' : '';
+                days += `<div class="calendar-day ${isToday}">${day}</div>`;
+            }
+            
+            return days;
+        }
+
+        // Enhanced game interactions
+        function initializeEnhancedGameInteractions() {
+            const contextMenu = document.getElementById('contextMenu');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            let activeCard = null;
+
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('dblclick', function() {
+                    launchGame(this);
+                });
+
+                card.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    activeCard = this;
+                    showContextMenu(e.clientX, e.clientY);
+                });
+            });
+
+            document.querySelectorAll('.context-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    if (activeCard) {
+                        handleContextAction(action, activeCard);
+                    }
+                    hideContextMenu();
+                });
+            });
+
+            function showContextMenu(x, y) {
+                contextMenu.style.left = x + 'px';
+                contextMenu.style.top = y + 'px';
+                contextMenu.classList.remove('hidden');
+            }
+
+            function hideContextMenu() {
+                contextMenu.classList.add('hidden');
+                activeCard = null;
+            }
+
+            function handleContextAction(action, card) {
+                const gameId = card.dataset.game;
+                const gameData = gameDatabase[gameId];
+                
+                switch(action) {
+                    case 'launch':
+                        launchGame(card);
+                        break;
+                    case 'info':
+                        if (gameData) showGameInfo(gameData);
+                        break;
+                    case 'settings':
+                        if (gameData) showGameSettings(gameData);
+                        break;
+                    case 'uninstall':
+                        const gameName = card.querySelector('.game-title').textContent;
+                        confirmUninstall(gameName);
+                        break;
+                }
+            }
+
+            function launchGame(card) {
+                const gameName = card.querySelector('.game-title').textContent;
+                
+                card.classList.add('launching');
+                document.getElementById('loadingGameName').textContent = gameName;
+                loadingOverlay.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                    card.classList.remove('launching');
+                    showNotification(`${gameName} launched successfully!`, 'success');
+                }, 2000);
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!contextMenu.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideContextMenu();
+                    closeAllModals();
+                }
+            });
+        }
+
+        function showGameInfo(gameData) {
+            const modal = document.getElementById('gameInfoModal');
+            const title = document.getElementById('gameInfoTitle');
+            const body = document.getElementById('gameInfoBody');
+            
+            title.textContent = gameData.title;
+            body.innerHTML = `
+                <div class="game-info-content">
+                    <div class="game-details">
+                        <div class="game-screenshots">
+                            ${gameData.screenshots.map(url => `<img src="${url}" alt="Screenshot" class="screenshot">`).join('')}
+                        </div>
+                        <p>${gameData.description}</p>
+                    </div>
+                    <div class="game-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Genre</span>
+                            <span class="stat-value">${gameData.genre}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Rating</span>
+                            <span class="stat-value">${gameData.rating}/5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Playtime</span>
+                            <span class="stat-value">${gameData.playtime}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Achievements</span>
+                            <span class="stat-value">${gameData.achievements}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function showGameSettings(gameData) {
+            const modal = document.getElementById('gameSettingsModal');
+            const title = document.getElementById('gameSettingsTitle');
+            const body = document.getElementById('gameSettingsBody');
+            
+            title.textContent = `${gameData.title} Settings`;
+            body.innerHTML = `
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="graphics">Graphics</button>
+                    <button class="settings-tab" data-tab="audio">Audio</button>
+                    <button class="settings-tab" data-tab="controls">Controls</button>
+                </div>
+                
+                <div class="settings-content active" id="graphicsSettings">
+                    <h3>Graphics Settings</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Quality</span>
+                            <span>${gameData.settings.graphics.quality}</span>
+                        </div>
+                    </div>
+                    <div class="toggle-container">
+                        <span>V-Sync</span>
+                        <div class="toggle-switch ${gameData.settings.graphics.vsync ? 'active' : ''}">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-content" id="audioSettings">
+                    <h3>Audio Settings</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Master Volume</span>
+                            <span>${gameData.settings.audio.master}%</span>
+                        </div>
+                        <input type="range" class="slider" min="0" max="100" value="${gameData.settings.audio.master}">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Effects</span>
+                            <span>${gameData.settings.audio.effects}%</span>
+                        </div>
+                        <input type="range" class="slider" min="0" max="100" value="${gameData.settings.audio.effects}">
+                    </div>
+                </div>
+                
+                <div class="settings-content" id="controlsSettings">
+                    <h3>Controls Settings</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Sensitivity</span>
+                            <span>${gameData.settings.controls.sensitivity}</span>
+                        </div>
+                        <input type="range" class="slider" min="1" max="10" value="${gameData.settings.controls.sensitivity}">
+                    </div>
+                </div>
+            `;
+            
+            initializeSettingsTabs();
+            modal.classList.remove('hidden');
+        }
+
+        function initializeSettingsTabs() {
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.settings-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const tabName = this.dataset.tab;
+                    document.getElementById(tabName + 'Settings').classList.add('active');
+                });
+            });
         }
 
         function confirmUninstall(gameName) {
             if (confirm(`Are you sure you want to uninstall ${gameName}?`)) {
                 showNotification(`${gameName} has been uninstalled`, 'warning');
             }
+        }
+
+        // Start Menu functionality
+        function initializeStartMenu() {
+            const startButton = document.getElementById('startButton');
+            const startMenu = document.getElementById('startMenu');
+            const searchInput = document.getElementById('startMenuSearch');
+
+            startButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleStartMenu();
+            });
+
+            document.querySelectorAll('.start-app-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const appName = this.dataset.app;
+                    openApplication(appName);
+                    hideStartMenu();
+                });
+            });
+
+            document.querySelectorAll('.power-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    handlePowerAction(action);
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filterStartMenuApps(this.value);
+                });
+            }
+
+            function toggleStartMenu() {
+                startMenu.classList.toggle('hidden');
+                if (!startMenu.classList.contains('hidden') && searchInput) {
+                    searchInput.focus();
+                }
+            }
+
+            function hideStartMenu() {
+                startMenu.classList.add('hidden');
+            }
+
+            function filterStartMenuApps(query) {
+                const appItems = document.querySelectorAll('.start-app-item');
+                appItems.forEach(item => {
+                    const appName = item.querySelector('span').textContent.toLowerCase();
+                    if (appName.includes(query.toLowerCase())) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+
+            function handlePowerAction(action) {
+                hideStartMenu();
+                switch(action) {
+                    case 'sleep':
+                        showNotification('System entering sleep mode...', 'info');
+                        break;
+                    case 'restart':
+                        showNotification('System restarting...', 'warning');
+                        break;
+                    case 'shutdown':
+                        showNotification('System shutting down...', 'warning');
+                        break;
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
+                    hideStartMenu();
+                }
+            });
+        }
+
+        // System Tray functionality
+        function initializeSystemTray() {
+            document.querySelectorAll('.tray-icon').forEach(icon => {
+                icon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const trayType = this.dataset.tray;
+                    toggleTrayPanel(trayType);
+                });
+            });
+
+            function toggleTrayPanel(type) {
+                document.querySelectorAll('.tray-panel').forEach(panel => {
+                    if (panel.id !== type + 'Panel') {
+                        panel.classList.add('hidden');
+                    }
+                });
+
+                const panel = document.getElementById(type + 'Panel');
+                panel.classList.toggle('hidden');
+
+                if (!panel.classList.contains('hidden')) {
+                    populateTrayPanel(type);
+                }
+            }
+
+            function populateTrayPanel(type) {
+                const content = document.getElementById(type + 'Content');
+                
+                switch(type) {
+                    case 'network':
+                        content.innerHTML = createNetworkContent();
+                        break;
+                    case 'audio':
+                        content.innerHTML = createAudioContent();
+                        initializeAudioControls();
+                        break;
+                    case 'notifications':
+                        content.innerHTML = createNotificationsContent();
+                        break;
+                    case 'power':
+                        content.innerHTML = createPowerContent();
+                        break;
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.tray-panel') && !e.target.closest('.tray-icon')) {
+                    document.querySelectorAll('.tray-panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                }
+            });
+        }
+
+        function createNetworkContent() {
+            return `
+                <div class="network-status">
+                    <div class="status-item">
+                        <i class="fas fa-wifi"></i>
+                        <div>
+                            <div class="status-title">WebbGames Network</div>
+                            <div class="status-subtitle">Connected</div>
+                        </div>
+                    </div>
+                    <div class="network-details">
+                        <div class="detail-item">
+                            <span>IP Address:</span>
+                            <span>192.168.1.100</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Speed:</span>
+                            <span>1 Gbps</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Signal:</span>
+                            <span>Excellent</span>
+                        </div>
+                    </div>
+                    <button class="network-btn" onclick="showNotification('Network settings opened', 'info')">
+                        Network Settings
+                    </button>
+                </div>
+            `;
+        }
+
+        function createAudioContent() {
+            return `
+                <div class="audio-mixer">
+                    <div class="volume-control">
+                        <div class="volume-item">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Master</span>
+                            <input type="range" class="volume-slider" min="0" max="100" value="80" id="masterVolume">
+                            <span class="volume-value">80%</span>
+                        </div>
+                        <div class="volume-item">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Games</span>
+                            <input type="range" class="volume-slider" min="0" max="100" value="75" id="gamesVolume">
+                            <span class="volume-value">75%</span>
+                        </div>
+                        <div class="volume-item">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                            <input type="range" class="volume-slider" min="0" max="100" value="60" id="musicVolume">
+                            <span class="volume-value">60%</span>
+                        </div>
+                    </div>
+                    <div class="audio-devices">
+                        <h4>Output Device</h4>
+                        <select class="device-select">
+                            <option>Speakers (High Definition Audio)</option>
+                            <option>Headphones (USB Audio)</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createNotificationsContent() {
+            return `
+                <div class="notifications-list">
+                    <div class="notification-item">
+                        <i class="fas fa-gamepad"></i>
+                        <div>
+                            <div class="notif-title">Space Explorer</div>
+                            <div class="notif-message">Achievement unlocked: First Steps</div>
+                            <div class="notif-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <i class="fas fa-download"></i>
+                        <div>
+                            <div class="notif-title">System Update</div>
+                            <div class="notif-message">Update available for download</div>
+                            <div class="notif-time">1 hour ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                            <div class="notif-title">Security</div>
+                            <div class="notif-message">System scan completed successfully</div>
+                            <div class="notif-time">3 hours ago</div>
+                        </div>
+                    </div>
+                    <button class="clear-notifications" onclick="clearNotifications()">
+                        Clear All Notifications
+                    </button>
+                </div>
+            `;
+        }
+
+        function createPowerContent() {
+            return `
+                <div class="power-management">
+                    <div class="battery-status">
+                        <i class="fas fa-battery-three-quarters"></i>
+                        <div>
+                            <div class="battery-level">75% Battery</div>
+                            <div class="battery-time">3 hours remaining</div>
+                        </div>
+                    </div>
+                    <div class="power-options-grid">
+                        <button class="power-option" onclick="handlePowerAction('sleep')">
+                            <i class="fas fa-moon"></i>
+                            <span>Sleep</span>
+                        </button>
+                        <button class="power-option" onclick="handlePowerAction('restart')">
+                            <i class="fas fa-redo"></i>
+                            <span>Restart</span>
+                        </button>
+                        <button class="power-option" onclick="handlePowerAction('shutdown')">
+                            <i class="fas fa-power-off"></i>
+                            <span>Shutdown</span>
+                        </button>
+                    </div>
+                    <div class="power-settings">
+                        <div class="toggle-container">
+                            <span>Power Saver Mode</span>
+                            <div class="toggle-switch" id="powerSaverToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initializeAudioControls() {
+            document.querySelectorAll('.volume-slider').forEach(slider => {
+                slider.addEventListener('input', function() {
+                    const value = this.value;
+                    const valueSpan = this.parentElement.querySelector('.volume-value');
+                    valueSpan.textContent = value + '%';
+                });
+            });
+        }
+
+        function clearNotifications() {
+            showNotification('All notifications cleared', 'info');
+            document.querySelector('.notifications-list').innerHTML = `
+                <div class="no-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No new notifications</p>
+                </div>
+            `;
+        }
+
+        // Application window management
+        function initializeApplicationWindows() {
+            document.querySelectorAll('.app-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const appName = this.dataset.app;
+                    openApplication(appName);
+                });
+            });
+        }
+
+        function openApplication(appName) {
+            const windowId = appName + 'Window';
+            const window = document.getElementById(windowId);
+            
+            if (window) {
+                window.classList.remove('hidden');
+                
+                switch(appName) {
+                    case 'files':
+                        populateFileManager();
+                        break;
+                    case 'settings':
+                        populateSettings();
+                        break;
+                    case 'taskmanager':
+                        populateTaskManager();
+                        break;
+                    case 'calculator':
+                        populateCalculator();
+                        break;
+                }
+                
+                showNotification(`${getAppDisplayName(appName)} opened`, 'info');
+            }
+        }
+
+        function closeWindow(windowId) {
+            document.getElementById(windowId).classList.add('hidden');
+        }
+
+        function getAppDisplayName(appName) {
+            const names = {
+                'files': 'File Manager',
+                'settings': 'Settings',
+                'taskmanager': 'Task Manager',
+                'calculator': 'Calculator'
+            };
+            return names[appName] || appName;
+        }
+
+        function populateFileManager() {
+            loadFileLocation('desktop');
+            
+            document.querySelectorAll('.file-nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.file-nav-item').forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const location = this.dataset.location;
+                    loadFileLocation(location);
+                });
+            });
+        }
+
+        function loadFileLocation(location) {
+            const fileGrid = document.getElementById('fileGrid');
+            const locationTitle = document.getElementById('currentLocation');
+            
+            if (locationTitle) {
+                locationTitle.textContent = location.charAt(0).toUpperCase() + location.slice(1);
+            }
+            
+            const files = fileSystem[location] || [];
+            if (fileGrid) {
+                fileGrid.innerHTML = files.map(file => `
+                    <div class="file-item" data-file="${file.name}">
+                        <div class="file-icon">
+                            <i class="${file.icon}"></i>
+                        </div>
+                        <div class="file-name">${file.name}</div>
+                    </div>
+                `).join('');
+
+                fileGrid.querySelectorAll('.file-item').forEach(item => {
+                    item.addEventListener('dblclick', function() {
+                        const fileName = this.dataset.file;
+                        showNotification(`Opening ${fileName}...`, 'info');
+                    });
+                });
+            }
+        }
+
+        function populateCalculator() {
+            const calculatorContent = document.getElementById('calculatorContent');
+            if (calculatorContent) {
+                calculatorContent.innerHTML = `
+                    <div class="calculator">
+                        <div class="calculator-display">
+                            <input type="text" id="calcDisplay" value="0" readonly>
+                        </div>
+                        <div class="calculator-buttons">
+                            <button class="calc-btn clear" onclick="clearCalculator()">C</button>
+                            <button class="calc-btn" onclick="appendToCalculator('/')">/</button>
+                            <button class="calc-btn" onclick="appendToCalculator('*')">×</button>
+                            <button class="calc-btn" onclick="deleteLast()">⌫</button>
+                            
+                            <button class="calc-btn" onclick="appendToCalculator('7')">7</button>
+                            <button class="calc-btn" onclick="appendToCalculator('8')">8</button>
+                            <button class="calc-btn" onclick="appendToCalculator('9')">9</button>
+                            <button class="calc-btn" onclick="appendToCalculator('-')">-</button>
+                            
+                            <button class="calc-btn" onclick="appendToCalculator('4')">4</button>
+                            <button class="calc-btn" onclick="appendToCalculator('5')">5</button>
+                            <button class="calc-btn" onclick="appendToCalculator('6')">6</button>
+                            <button class="calc-btn" onclick="appendToCalculator('+')">+</button>
+                            
+                            <button class="calc-btn" onclick="appendToCalculator('1')">1</button>
+                            <button class="calc-btn" onclick="appendToCalculator('2')">2</button>
+                            <button class="calc-btn" onclick="appendToCalculator('3')">3</button>
+                            <button class="calc-btn equals" onclick="calculateResult()">=</button>
+                            
+                            <button class="calc-btn zero" onclick="appendToCalculator('0')">0</button>
+                            <button class="calc-btn" onclick="appendToCalculator('.')">.</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Calculator functions
+        let calcExpression = '';
+        let calcDisplay = '0';
+
+        function appendToCalculator(value) {
+            const display = document.getElementById('calcDisplay');
+            if (display) {
+                if (calcDisplay === '0' && !isNaN(value)) {
+                    calcDisplay = value;
+                } else {
+                    calcDisplay += value;
+                }
+                calcExpression += value;
+                display.value = calcDisplay;
+            }
+        }
+
+        function clearCalculator() {
+            const display = document.getElementById('calcDisplay');
+            if (display) {
+                calcDisplay = '0';
+                calcExpression = '';
+                display.value = calcDisplay;
+            }
+        }
+
+        function deleteLast() {
+            const display = document.getElementById('calcDisplay');
+            if (display) {
+                if (calcDisplay.length > 1) {
+                    calcDisplay = calcDisplay.slice(0, -1);
+                    calcExpression = calcExpression.slice(0, -1);
+                } else {
+                    calcDisplay = '0';
+                    calcExpression = '';
+                }
+                display.value = calcDisplay;
+            }
+        }
+
+        function calculateResult() {
+            const display = document.getElementById('calcDisplay');
+            if (display) {
+                try {
+                    const result = eval(calcExpression.replace('×', '*'));
+                    calcDisplay = result.toString();
+                    calcExpression = result.toString();
+                    display.value = calcDisplay;
+                } catch (error) {
+                    calcDisplay = 'Error';
+                    calcExpression = '';
+                    display.value = calcDisplay;
+                }
+            }
+        }
+
+        function populateTaskManager() {
+            const taskManagerContent = document.getElementById('taskManagerContent');
+            if (taskManagerContent) {
+                const processes = [
+                    { name: 'Space Explorer', cpu: 15.2, memory: 2.1, status: 'Running' },
+                    { name: 'System', cpu: 2.1, memory: 0.8, status: 'Running' },
+                    { name: 'Chrome', cpu: 8.5, memory: 1.2, status: 'Running' },
+                    { name: 'Discord', cpu: 3.2, memory: 0.6, status: 'Running' }
+                ];
+
+                taskManagerContent.innerHTML = `
+                    <div class="task-manager">
+                        <div class="process-header">
+                            <div class="process-col">Process</div>
+                            <div class="process-col">CPU</div>
+                            <div class="process-col">Memory</div>
+                            <div class="process-col">Status</div>
+                        </div>
+                        <div class="process-list">
+                            ${processes.map(proc => `
+                                <div class="process-item">
+                                    <div class="process-col">${proc.name}</div>
+                                    <div class="process-col">${proc.cpu}%</div>
+                                    <div class="process-col">${proc.memory} GB</div>
+                                    <div class="process-col status-${proc.status.toLowerCase()}">${proc.status}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function populateSettings() {
+            const settingsContent = document.getElementById('settingsContent');
+            if (settingsContent) {
+                settingsContent.innerHTML = `
+                    <div class="settings-tabs">
+                        <button class="settings-tab active" data-tab="display">Display</button>
+                        <button class="settings-tab" data-tab="audio">Audio</button>
+                        <button class="settings-tab" data-tab="system">System</button>
+                    </div>
+                    
+                    <div class="settings-content active" id="displaySettings">
+                        <h3>Display Settings</h3>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Brightness</span>
+                                <span id="brightnessValue">80%</span>
+                            </div>
+                            <input type="range" class="slider" min="0" max="100" value="80" id="brightnessSlider">
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <span>Dark Mode</span>
+                            <div class="toggle-switch active" id="darkModeToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-content" id="audioSettings">
+                        <h3>Audio Settings</h3>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Master Volume</span>
+                                <span id="masterVolumeValue">80%</span>
+                            </div>
+                            <input type="range" class="slider" min="0" max="100" value="80" id="masterVolumeSlider">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-content" id="systemSettings">
+                        <h3>System Settings</h3>
+                        <div class="toggle-container">
+                            <span>System Notifications</span>
+                            <div class="toggle-switch active" id="notificationsToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                initializeSettingsTabs();
+                initializeSettingsControls();
+            }
+        }
+
+        function initializeSettingsControls() {
+            document.querySelectorAll('.slider').forEach(slider => {
+                slider.addEventListener('input', function() {
+                    const value = this.value;
+                    const valueSpan = document.getElementById(this.id.replace('Slider', 'Value'));
+                    if (valueSpan) {
+                        valueSpan.textContent = value + '%';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        }
+
+        // Utility functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.add('hidden');
+            });
         }
 
         function showNotification(message, type = 'info') {
@@ -349,30 +1172,17 @@
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
             }, 3000);
         }
 
-        // Global Event Listeners
-        document.addEventListener('click', function(e) {
-            if (!contextMenu.contains(e.target)) {
-                hideContextMenu();
-            }
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                hideContextMenu();
-            }
-        });
-
-        // Prevent context menu on non-game elements
-        document.addEventListener('contextmenu', function(e) {
-            if (!e.target.closest('.game-card')) {
-                e.preventDefault();
-            }
-        });
+        // Initialize everything when DOM is loaded
+        console.log('WebbGames Desktop Enhanced - All systems ready!');
+</script>
+    <script>
 
         // Enhanced Desktop Functionality
         
@@ -380,7 +1190,9 @@
         const systemData = {
             cpu: { usage: 45, cores: 8, temperature: 62, frequency: 3.2 },
             memory: { used: 8.2, total: 16, available: 7.8 },
-            temperature: { cpu: 62, gpu: 58, motherboard: 45 }
+            temperature: { cpu: 62, gpu: 58, motherboard: 45 },
+            network: { status: 'Connected', speed: '1 Gbps', ip: '192.168.1.100' },
+            audio: { master: 80, effects: 75, music: 60, microphone: 65 }
         };
 
         // Game database with detailed information
@@ -388,16 +1200,16 @@
             'space-explorer': {
                 title: 'Space Explorer',
                 genre: 'Action Adventure',
-                description: 'Embark on an epic journey through the cosmos in this thrilling space adventure. Explore distant planets, battle alien creatures, and uncover the mysteries of the universe.',
+                description: 'Embark on an epic journey through the cosmos in this thrilling space adventure.',
                 rating: 4.8,
                 playtime: '45 hours',
                 achievements: 28,
                 screenshots: [
-                    'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400',
-                    'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400'
+                    'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=225&fit=crop',
+                    'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400&h=225&fit=crop'
                 ],
                 settings: {
-                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: true, antialiasing: 'MSAA 4x' },
+                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: true },
                     audio: { master: 80, effects: 75, music: 60, voice: 85 },
                     controls: { sensitivity: 7, invertY: false, autoAim: false }
                 }
@@ -405,88 +1217,34 @@
             'mind-bender': {
                 title: 'Mind Bender',
                 genre: 'Puzzle Strategy',
-                description: 'Challenge your intellect with mind-bending puzzles that will test your logic and creativity. Each level presents unique challenges that require innovative thinking.',
+                description: 'Challenge your intellect with mind-bending puzzles.',
                 rating: 4.6,
                 playtime: '25 hours',
                 achievements: 15,
                 screenshots: [
-                    'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400',
-                    'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'
+                    'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400&h=225&fit=crop',
+                    'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=225&fit=crop'
                 ],
                 settings: {
-                    graphics: { quality: 'High', resolution: '1920x1080', vsync: true, antialiasing: 'FXAA' },
+                    graphics: { quality: 'High', resolution: '1920x1080', vsync: true },
                     audio: { master: 70, effects: 65, music: 80, voice: 75 },
                     controls: { sensitivity: 5, hints: true, autoSave: true }
                 }
-            },
-            'speed-racer': {
-                title: 'Speed Racer',
-                genre: 'Racing Simulation',
-                description: 'Experience the thrill of high-speed racing with realistic physics and stunning visuals. Race on iconic tracks around the world and customize your dream car.',
-                rating: 4.7,
-                playtime: '60 hours',
-                achievements: 35,
-                screenshots: [
-                    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
-                    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400'
-                ],
-                settings: {
-                    graphics: { quality: 'Ultra', resolution: '2560x1440', vsync: false, antialiasing: 'TAA' },
-                    audio: { master: 85, effects: 90, music: 70, voice: 80 },
-                    controls: { sensitivity: 8, assists: false, forceFeedback: true }
-                }
-            },
-            'strategy-master': {
-                title: 'Strategy Master',
-                genre: 'Turn-based Strategy',
-                description: 'Command armies and build empires in this deep strategic experience. Every decision matters as you navigate complex political and military challenges.',
-                rating: 4.9,
-                playtime: '120 hours',
-                achievements: 42,
-                screenshots: [
-                    'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400',
-                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400'
-                ],
-                settings: {
-                    graphics: { quality: 'High', resolution: '1920x1080', vsync: true, antialiasing: 'MSAA 2x' },
-                    audio: { master: 75, effects: 70, music: 85, voice: 80 },
-                    controls: { sensitivity: 6, tooltips: true, autoEndTurn: false }
-                }
-            },
-            'quest-world': {
-                title: 'Quest World',
-                genre: 'Open World RPG',
-                description: 'Immerse yourself in a vast fantasy world filled with epic quests, memorable characters, and endless adventures. Your choices shape the destiny of the realm.',
-                rating: 4.8,
-                playtime: '200 hours',
-                achievements: 67,
-                screenshots: [
-                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400'
-                ],
-                settings: {
-                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: true, antialiasing: 'TAA' },
-                    audio: { master: 80, effects: 75, music: 90, voice: 85 },
-                    controls: { sensitivity: 7, subtitles: true, quickSave: true }
-                }
-            },
-            'cyber-strike': {
-                title: 'Cyber Strike',
-                genre: 'FPS Shooter',
-                description: 'Enter the cyberpunk battlefield in this intense first-person shooter. Use advanced weapons and cybernetic enhancements to dominate your opponents.',
-                rating: 4.5,
-                playtime: '80 hours',
-                achievements: 31,
-                screenshots: [
-                    'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
-                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400'
-                ],
-                settings: {
-                    graphics: { quality: 'Ultra', resolution: '1920x1080', vsync: false, antialiasing: 'MSAA 4x' },
-                    audio: { master: 85, effects: 95, music: 65, voice: 80 },
-                    controls: { sensitivity: 9, crosshair: 'dot', recoilCompensation: false }
-                }
             }
+        };
+
+        // File system simulation
+        const fileSystem = {
+            desktop: [
+                { name: 'Game Shortcuts', type: 'folder', icon: 'fas fa-folder' },
+                { name: 'Screenshots', type: 'folder', icon: 'fas fa-folder' },
+                { name: 'ReadMe.txt', type: 'file', icon: 'fas fa-file-alt' }
+            ],
+            documents: [
+                { name: 'Game Guides', type: 'folder', icon: 'fas fa-folder' },
+                { name: 'Save Games', type: 'folder', icon: 'fas fa-folder' },
+                { name: 'Settings.json', type: 'file', icon: 'fas fa-file-code' }
+            ]
         };
 
         // Initialize enhanced functionality
@@ -496,253 +1254,11 @@
             initializeEnhancedGameInteractions();
             initializeStartMenu();
             initializeSystemTray();
+            initializeApplicationWindows();
         });
 
-        // System monitoring with real-time updates
-        function initializeSystemMonitoring() {
-            // Add click handlers for system info items
-            document.querySelectorAll('.info-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const infoType = this.dataset.info;
-                    showSystemInfoModal(infoType);
-                });
-            });
-
-            // Simulate real-time system data updates
-            setInterval(updateSystemData, 2000);
-        }
-
-        function updateSystemData() {
-            // Simulate CPU usage fluctuation
-            systemData.cpu.usage = Math.max(20, Math.min(95, systemData.cpu.usage + (Math.random() - 0.5) * 10));
-            document.getElementById('cpuUsage').textContent = `CPU ${Math.round(systemData.cpu.usage)}%`;
-
-            // Simulate memory usage changes
-            systemData.memory.used = Math.max(4, Math.min(14, systemData.memory.used + (Math.random() - 0.5) * 0.5));
-            document.getElementById('memoryUsage').textContent = `${systemData.memory.used.toFixed(1)}GB`;
-
-            // Simulate temperature changes
-            systemData.temperature.cpu = Math.max(45, Math.min(85, systemData.temperature.cpu + (Math.random() - 0.5) * 3));
-            document.getElementById('tempReading').textContent = `${Math.round(systemData.temperature.cpu)}°C`;
-        }
-
-        function showSystemInfoModal(infoType) {
-            showNotification(`Opening ${infoType.toUpperCase()} monitoring panel...`, 'info');
-            
-            setTimeout(() => {
-                let content = '';
-                switch(infoType) {
-                    case 'cpu':
-                        content = `CPU: Intel Core i7-12700K\n${systemData.cpu.cores} Cores, ${systemData.cpu.frequency}GHz\nUsage: ${Math.round(systemData.cpu.usage)}%\nTemperature: ${systemData.temperature.cpu}°C`;
-                        break;
-                    case 'memory':
-                        const memoryPercent = (systemData.memory.used / systemData.memory.total) * 100;
-                        content = `Memory: ${systemData.memory.total}GB DDR4\nUsed: ${systemData.memory.used.toFixed(1)}GB (${Math.round(memoryPercent)}%)\nAvailable: ${systemData.memory.available.toFixed(1)}GB\nSpeed: 3200MHz`;
-                        break;
-                    case 'temperature':
-                        content = `System Temperatures:\nCPU: ${systemData.temperature.cpu}°C\nGPU: ${systemData.temperature.gpu}°C\nMotherboard: ${systemData.temperature.motherboard}°C`;
-                        break;
-                }
-                alert(content);
-            }, 500);
-        }
-
-        // Enhanced time display with calendar functionality
-        function initializeTimeDisplay() {
-            function updateTime() {
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', { 
-                    hour12: false, 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                const dateString = now.toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric' 
-                });
-                
-                document.getElementById('currentTime').textContent = timeString;
-                document.getElementById('currentDate').textContent = dateString;
-            }
-
-            updateTime();
-            setInterval(updateTime, 1000);
-
-            // Add click handler for calendar
-            document.getElementById('timeSection').addEventListener('click', showCalendar);
-        }
-
-        function showCalendar() {
-            const now = new Date();
-            const dateInfo = `Today: ${now.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            })}\n\nUpcoming Events:\n• System Maintenance - Tomorrow 2:00 AM\n• Game Update Available - Space Explorer\n• Weekly Backup - Friday 11:00 PM`;
-            
-            showNotification('Opening calendar...', 'info');
-            setTimeout(() => alert(dateInfo), 500);
-        }
-
-        // Enhanced game interactions
-        function initializeEnhancedGameInteractions() {
-            const contextMenu = document.getElementById('contextMenu');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            let activeCard = null;
-
-            // Game card interactions
-            document.querySelectorAll('.game-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    launchGame(this);
-                });
-
-                card.addEventListener('contextmenu', function(e) {
-                    e.preventDefault();
-                    activeCard = this;
-                    showContextMenu(e.clientX, e.clientY);
-                });
-
-                card.addEventListener('mouseenter', function() {
-                    this.classList.add('hovered');
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    this.classList.remove('hovered');
-                });
-            });
-
-            // Context menu actions
-            document.querySelectorAll('.context-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const action = this.dataset.action;
-                    if (activeCard) {
-                        handleContextAction(action, activeCard);
-                    }
-                    hideContextMenu();
-                });
-            });
-
-            function handleContextAction(action, card) {
-                const gameId = card.dataset.game;
-                const gameData = gameDatabase[gameId];
-                
-                switch(action) {
-                    case 'launch':
-                        launchGame(card);
-                        break;
-                    case 'info':
-                        showGameInfo(gameData);
-                        break;
-                    case 'settings':
-                        showGameSettings(gameData);
-                        break;
-                    case 'uninstall':
-                        confirmUninstall(gameData.title);
-                        break;
-                }
-            }
-
-            function showGameInfo(gameData) {
-                const info = `${gameData.title}\n${gameData.genre}\n\n${gameData.description}\n\nRating: ${gameData.rating}/5 stars\nPlaytime: ${gameData.playtime}\nAchievements: ${gameData.achievements}`;
-                showNotification('Loading game information...', 'info');
-                setTimeout(() => alert(info), 500);
-            }
-
-            function showGameSettings(gameData) {
-                const settings = `${gameData.title} Settings\n\nGraphics:\n• Quality: ${gameData.settings.graphics.quality}\n• Resolution: ${gameData.settings.graphics.resolution}\n• V-Sync: ${gameData.settings.graphics.vsync ? 'On' : 'Off'}\n• Anti-aliasing: ${gameData.settings.graphics.antialiasing}\n\nAudio:\n• Master: ${gameData.settings.audio.master}%\n• Effects: ${gameData.settings.audio.effects}%\n• Music: ${gameData.settings.audio.music}%\n• Voice: ${gameData.settings.audio.voice}%`;
-                showNotification('Opening game settings...', 'info');
-                setTimeout(() => alert(settings), 500);
-            }
-        }
-
-        // Start Menu functionality
-        function initializeStartMenu() {
-            const startButton = document.getElementById('startButton');
-            const startMenu = document.getElementById('startMenu');
-            
-            if (startButton) {
-                startButton.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    toggleStartMenu();
-                });
-            }
-
-            // Simulate start menu with notification
-            function toggleStartMenu() {
-                showNotification('Start Menu opened', 'info');
-                setTimeout(() => {
-                    const menuItems = 'Start Menu:\n\n📁 File Manager\n⚙️ Settings\n📊 Task Manager\n🧮 Calculator\n\n🔧 System Tools:\n📋 Registry Editor\n💻 Terminal\n\n⚡ Power Options:\n🌙 Sleep\n🔄 Restart\n⚡ Shutdown';
-                    alert(menuItems);
-                }, 300);
-            }
-        }
-
-        // System Tray functionality
-        function initializeSystemTray() {
-            document.querySelectorAll('.tray-icon').forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const trayType = this.dataset.tray;
-                    showTrayPanel(trayType);
-                });
-            });
-
-            function showTrayPanel(trayType) {
-                let content = '';
-                switch(trayType) {
-                    case 'network':
-                        content = 'Network Settings:\n\n📶 WiFi: Connected\n🌐 Network: WebbGames-5G\n📡 Signal: Excellent (95%)\n⚡ Speed: 150 Mbps\n\n🔧 Network Troubleshooter\n⚙️ Advanced Settings';
-                        break;
-                    case 'audio':
-                        content = 'Audio Mixer:\n\n🔊 Master Volume: 75%\n🎵 Music: 80%\n🎮 Game Audio: 90%\n🎤 Microphone: 65%\n\n🎧 Output Device: Headphones\n🎙️ Input Device: USB Microphone';
-                        break;
-                    case 'notifications':
-                        content = 'Notifications:\n\n📢 System Update Available\n🎮 3 Game Updates Ready\n📧 2 New Messages\n⚠️ Low Disk Space Warning\n\n🔕 Do Not Disturb: Off\n⚙️ Notification Settings';
-                        break;
-                    case 'power':
-                        content = 'Power Management:\n\n🔋 Battery: 87% (Charging)\n⚡ Power Plan: High Performance\n🌡️ CPU Temperature: 62°C\n\n💡 Power Saver Mode\n⚙️ Advanced Power Settings\n📊 Battery Report';
-                        break;
-                }
-                showNotification(`Opening ${trayType} panel...`, 'info');
-                setTimeout(() => alert(content), 500);
-            }
-        }
-
-        // Enhanced taskbar app functionality
-        document.querySelectorAll('.app-icon').forEach(icon => {
-            icon.addEventListener('click', function() {
-                document.querySelectorAll('.app-icon').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                
-                const appType = this.dataset.app;
-                const title = this.getAttribute('title');
-                
-                showNotification(`Opening ${title}...`, 'info');
-                
-                setTimeout(() => {
-                    let content = '';
-                    switch(appType) {
-                        case 'files':
-                            content = 'File Manager:\n\n📁 Documents\n📁 Downloads\n📁 Pictures\n📁 Videos\n📁 Games\n\n💾 Local Disk (C:) - 256 GB free\n💿 Local Disk (D:) - 1.2 TB free';
-                            break;
-                        case 'settings':
-                            content = 'System Settings:\n\n🖥️ Display & Graphics\n🔊 Sound & Audio\n🌐 Network & Internet\n🔐 Privacy & Security\n⚙️ System & Performance\n🎮 Gaming & Apps\n👤 User Accounts';
-                            break;
-                        case 'taskmanager':
-                            content = 'Task Manager:\n\n📊 Performance:\n• CPU: 45% (Intel i7-12700K)\n• Memory: 8.2/16 GB (51%)\n• Disk: 15% activity\n• Network: 2.5 Mbps\n\n🔄 Running Processes: 127\n⚡ Startup Programs: 12 enabled';
-                            break;
-                        case 'calculator':
-                            content = 'Calculator Ready\n\nStandard Calculator Mode\n\n[7] [8] [9] [÷]\n[4] [5] [6] [×]\n[1] [2] [3] [-]\n[0] [.] [=] [+]\n\nResult: 0';
-                            break;
-                    }
-                    alert(content);
-                }, 500);
-            });
-        });
-
-        // Initialize
-        console.log('WebbGames Desktop with Enhanced Functionality initialized successfully');
+        // Initialize everything when DOM is loaded
+        console.log('WebbGames Desktop Enhanced - All systems ready!');
     </script>
 </body>
 </html>
